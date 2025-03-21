@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document Chatbot Interface</title>
+    <script>
+        // Function to handle file upload
+        function uploadFile() {
+            let fileInput = document.getElementById('file');
+            let model = document.getElementById('model').value;
+
+            // Check if a file is selected
+            if (!fileInput.files[0]) {
+                alert("Please choose a file to upload.");
+                return;
+            }
+
+            let formData = new FormData();
+            // Note the "name" attribute must match the key used on the backend ('file')
+            formData.append('file', fileInput.files[0]);
+            formData.append('model', model);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById('content').value = data.content;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while uploading the file.");
+            });
+        }
+
+        // Function to send a question to the backend
+        function askQuestion() {
+            let content = document.getElementById('content').value;
+            let question = document.getElementById('question').value;
+            let model = document.getElementById('model').value;
+
+            fetch('/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content, question: question, model: model })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById('response').innerText = data.response;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while processing your question.");
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Document Chatbot Interface</h1>
+
+    <!-- File Upload Section -->
+    <label for="file">Choose a document file (PDF, Word, Excel):</label>
+    <!-- Added the name attribute -->
+    <input type="file" id="file" name="file"><br><br>
+
+    <!-- Dropdown to select the model -->
+    <label for="model">Choose a model:</label>
+    <select id="model">
+        <option value="Gemma 7B">Gemma 7B</option>
+        <option value="Gemma 2B">Gemma 2B</option>
+        <option value="Llama3">Llama3</option>
+    </select><br><br>
+
+    <!-- Button to trigger the file upload -->
+    <button onclick="uploadFile()">Upload File</button><br><br>
+
+    <!-- Textarea to display the uploaded file's content -->
+    <textarea id="content" rows="10" cols="50" placeholder="File content will appear here..." readonly></textarea><br><br>
+
+    <!-- Input for the user's question -->
+    <label for="question">Ask a question about the document:</label>
+    <input type="text" id="question" placeholder="Type your question here..."><br><br>
+
+    <!-- Button to send the question -->
+    <button onclick="askQuestion()">Ask</button><br><br>
+
+    <!-- Display area for chatbot's response -->
+    <p><strong>Response:</strong></p>
+    <p id="response"></p>
+</body>
+</html>
